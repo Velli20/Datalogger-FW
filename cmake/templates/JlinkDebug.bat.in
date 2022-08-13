@@ -1,0 +1,10 @@
+@echo off
+
+setlocal
+
+start "JLink GDB Server" "@JLinkGDBServer_Program@" @JLinkGDBServerArgs@
+
+rem Start GDB.
+
+"@CMAKE_GDB@" "@ARG_ELF_EXECUTABLE@" -x "@GDB_SCRIPT_PATH@"
+

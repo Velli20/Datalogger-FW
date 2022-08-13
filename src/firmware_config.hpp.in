@@ -1,0 +1,93 @@
+#pragma once
+
+namespace sys::config {
+
+struct freertos
+{
+    static constexpr auto value = []() -> bool
+    {
+        constexpr auto k_string_value = std::string_view{"@CONFIG_FREERTOS@"};
+        static_assert(k_string_value == std::string_view{"ON"} || k_string_value == std::string_view{"OFF"});
+
+        return k_string_value == std::string_view{"ON"} ? true : false;
+    }();
+};
+
+struct system_view
+{
+    static constexpr auto value = []() -> bool
+    {
+        constexpr auto k_string_value = std::string_view{"@CONFIG_SYSTEM_VIEW@"};
+        static_assert(k_string_value == std::string_view{"ON"} || k_string_value == std::string_view{"OFF"});
+
+        return k_string_value == std::string_view{"ON"} ? true : false;
+    }();
+};
+
+struct tinyusb
+{
+    static constexpr auto value = []() -> bool
+    {
+        constexpr auto k_string_value = std::string_view{"@CONFIG_TINY_USB@"};
+        static_assert(k_string_value == std::string_view{"ON"} || k_string_value == std::string_view{"OFF"});
+
+        return k_string_value == std::string_view{"ON"} ? true : false;
+    }();
+};
+
+struct littlefs
+{
+    static constexpr auto value = []() -> bool
+    {
+        constexpr auto k_string_value = std::string_view{"@CONFIG_LITTLEFS@"};
+        static_assert(k_string_value == std::string_view{"ON"} || k_string_value == std::string_view{"OFF"});
+
+        return k_string_value == std::string_view{"ON"} ? true : false;
+    }();
+};
+
+struct chan_fatfs
+{
+    static constexpr auto value = []() -> bool
+    {
+        constexpr auto k_string_value = std::string_view{"@CONFIG_CHAN_FATFS@"};
+        static_assert(k_string_value == std::string_view{"ON"} || k_string_value == std::string_view{"OFF"});
+
+        return k_string_value == std::string_view{"ON"} ? true : false;
+    }();
+};
+
+struct build_type
+{
+    private:
+
+    static constexpr auto k_string_value = std::string_view{"@CMAKE_BUILD_TYPE@"};
+
+    static constexpr auto valid = []() -> bool
+    {
+        return k_string_value == std::string_view{"Debug"}      ||
+               k_string_value == std::string_view{"MinSizeRel"} ||
+               k_string_value == std::string_view{"Release"};
+    }();
+
+    static_assert(valid == true, "Invalid CMake build type. Check your CMake configuration.");
+
+    public:
+
+    static constexpr auto debug = []() -> bool
+    {
+        return k_string_value == std::string_view{"Debug"} ? true : false;
+    }();
+
+    static constexpr auto release = []() -> bool
+    {
+        return k_string_value == std::string_view{"Release"} ? true : false;
+    }();
+
+    static constexpr auto release_min_size = []() -> bool
+    {
+        return k_string_value == std::string_view{"MinSizeRel"} ? true : false;
+    }();
+};
+
+} // namespace sys::config

@@ -1,0 +1,3 @@
+loadfile @JLINK_HEX_EXECUTABLE@
+r
+q

@@ -1,0 +1,46 @@
+define qkill
+  set confirm off
+   kill
+end
+
+define reset
+  monitor halt
+  monitor reset
+  monitor go
+end
+
+# Backtrace all threads.
+
+define btall
+  thread apply all backtrace
+end
+
+define build
+  shell bash build.sh stm32l4_custom_v02
+  load
+end
+
+set prompt (arm-gdb)
+
+set history save on
+set history size 10000
+set history filename ~/.gdb_history
+
+#source ~/.gdbinit
+target remote @JLINK_GDB_LOCALHOST@
+monitor halt
+monitor reset
+# set print pretty on
+# focus cmd
+
+# To use semihosting, it must be enabled with command:
+# monitor arm semihosting enable
+
+set print pretty
+set print asm-demangle on
+set mem inaccessible-by-default off
+set pagination off
+compare-sections
+
+load
+monitor reset

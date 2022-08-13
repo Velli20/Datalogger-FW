@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -m
+@JLinkGDBServer_Program@  @JLinkGDBServerArgs@ &
+set +m
+
+# Start GDB.
+
+@CMAKE_GDB@ @ARG_ELF_EXECUTABLE@ -x @GDB_SCRIPT_PATH@
+
+# Kill all backgroud processes.
+
+for PID in $( jobs -p );
+	do kill -9 $PID ;
+done;
