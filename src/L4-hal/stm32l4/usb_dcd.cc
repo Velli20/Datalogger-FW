@@ -4,21 +4,27 @@
 #include <base.hpp>
 
 #include "tusb_option.h"
-#include "device/dcd.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#include "device/dcd.h"
+#pragma GCC diagnostic pop
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wvolatile"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
 #include "stm32l4xx.h"
 #include "stm32l4xx_hal.h"
-
-#include <assert.h>
+#pragma GCC diagnostic pop
 
 #ifndef MAX_EP_COUNT
-#  define MAX_EP_COUNT 8U
+#define MAX_EP_COUNT 8U
 #endif
 
-constinit std::uint16_t last_in_size{};
-constinit std::uint16_t last_out_size{};
-
 namespace {
+
+constinit std::uint16_t s_last_in_size{};
+constinit std::uint16_t s_last_out_size{};
 
 void dcd_open_ep0(PCD_HandleTypeDef* usb)
 {
@@ -33,10 +39,9 @@ void dcd_open_ep0(PCD_HandleTypeDef* usb)
 
 } // namespace
 
-
 namespace sys::hal {
 
-PCD_HandleTypeDef m_pcd_handle;
+PCD_HandleTypeDef g_pcd_handle;
 
 // Initialize controller to device mode
 
@@ -46,29 +51,29 @@ extern "C" void dcd_init(std::uint8_t rhport)
 
     debug_assert(rhport == 0);
 
-    m_pcd_handle.pData                        = nullptr;
-    m_pcd_handle.Instance                     = USB_OTG_FS;
-    m_pcd_handle.Init.dev_endpoints           = MAX_EP_COUNT;
-    m_pcd_handle.Init.phy_itface              = PCD_PHY_EMBEDDED;
-    m_pcd_handle.Init.speed                   = PCD_SPEED_FULL;
-    m_pcd_handle.Init.Sof_enable              = DISABLE;
-    m_pcd_handle.Init.low_power_enable        = DISABLE;
-    m_pcd_handle.Init.lpm_enable              = DISABLE;
-    m_pcd_handle.Init.battery_charging_enable = DISABLE;
-    m_pcd_handle.Init.use_dedicated_ep1       = DISABLE;
-    m_pcd_handle.Init.vbus_sensing_enable     = DISABLE;
-    m_pcd_handle.Init.dma_enable              = DISABLE;
+    g_pcd_handle.pData                        = nullptr;
+    g_pcd_handle.Instance                     = USB_OTG_FS;
+    g_pcd_handle.Init.dev_endpoints           = MAX_EP_COUNT;
+    g_pcd_handle.Init.phy_itface              = PCD_PHY_EMBEDDED;
+    g_pcd_handle.Init.speed                   = PCD_SPEED_FULL;
+    g_pcd_handle.Init.Sof_enable              = DISABLE;
+    g_pcd_handle.Init.low_power_enable        = DISABLE;
+    g_pcd_handle.Init.lpm_enable              = DISABLE;
+    g_pcd_handle.Init.battery_charging_enable = DISABLE;
+    g_pcd_handle.Init.use_dedicated_ep1       = DISABLE;
+    g_pcd_handle.Init.vbus_sensing_enable     = DISABLE;
+    g_pcd_handle.Init.dma_enable              = DISABLE;
 
-    rc = HAL_PCD_Init(&m_pcd_handle);
+    rc = HAL_PCD_Init(std::addressof(g_pcd_handle));
     debug_assert(rc == HAL_OK);
 
-    HAL_PCDEx_SetRxFiFo(&m_pcd_handle,    0x80);         // shared rx buffer
-    HAL_PCDEx_SetTxFiFo(&m_pcd_handle, 0, 0x20);         // ep0 tx buffer
-    HAL_PCDEx_SetTxFiFo(&m_pcd_handle, 1, 0x10);         // ep1 (keyboard) tx buffer
-    HAL_PCDEx_SetTxFiFo(&m_pcd_handle, 2, 0x10);         // ep2 (mouse, system, consumer) tx buffer
-    HAL_PCDEx_SetTxFiFo(&m_pcd_handle, 3, 0x80);         // ep3 (webusb or msc) tx buffer
+    HAL_PCDEx_SetRxFiFo(std::addressof(g_pcd_handle),    0x80);         // shared rx buffer
+    HAL_PCDEx_SetTxFiFo(std::addressof(g_pcd_handle), 0, 0x20);         // ep0 tx buffer
+    HAL_PCDEx_SetTxFiFo(std::addressof(g_pcd_handle), 1, 0x10);         // ep1 (keyboard) tx buffer
+    HAL_PCDEx_SetTxFiFo(std::addressof(g_pcd_handle), 2, 0x10);         // ep2 (mouse, system, consumer) tx buffer
+    HAL_PCDEx_SetTxFiFo(std::addressof(g_pcd_handle), 3, 0x80);         // ep3 (webusb or msc) tx buffer
 
-    rc = HAL_PCD_Start(&m_pcd_handle);
+    rc = HAL_PCD_Start(std::addressof(g_pcd_handle));
     debug_assert(rc == HAL_OK);
 }
 
@@ -94,10 +99,10 @@ extern "C" void dcd_set_address(std::uint8_t rhport, std::uint8_t dev_addr)
 
     static_cast<void>(rhport);
 
-    rc = HAL_PCD_SetAddress(&m_pcd_handle, dev_addr);
+    rc = HAL_PCD_SetAddress(std::addressof(g_pcd_handle), dev_addr);
     debug_assert(rc == HAL_OK);
 
-    rc = HAL_PCD_EP_Transmit(&m_pcd_handle, 0, nullptr, 0);
+    rc = HAL_PCD_EP_Transmit(std::addressof(g_pcd_handle), 0, nullptr, 0);
     debug_assert(rc == HAL_OK);
 }
 
@@ -109,12 +114,12 @@ extern "C" void dcd_remote_wakeup(std::uint8_t rhport)
 
     static_cast<void>(rhport);
 
-    rc = HAL_PCD_ActivateRemoteWakeup(&m_pcd_handle);
+    rc = HAL_PCD_ActivateRemoteWakeup(std::addressof(g_pcd_handle));
     debug_assert(rc == HAL_OK);
 
     HAL_Delay(5);
 
-    rc = HAL_PCD_DeActivateRemoteWakeup(&m_pcd_handle);
+    rc = HAL_PCD_DeActivateRemoteWakeup(std::addressof(g_pcd_handle));
     debug_assert(rc == HAL_OK);
 }
 
@@ -124,7 +129,7 @@ extern "C" void dcd_connect(std::uint8_t rhport)
 {
     static_cast<void>(rhport);
 
-    const auto rc = HAL_PCD_DevConnect(&m_pcd_handle);
+    const auto rc = HAL_PCD_DevConnect(std::addressof(g_pcd_handle));
     debug_assert(rc == HAL_OK);
 }
 
@@ -134,7 +139,7 @@ extern "C" void dcd_disconnect(std::uint8_t rhport)
 {
     static_cast<void>(rhport);
 
-    const auto rc = HAL_PCD_DevDisconnect(&m_pcd_handle);
+    const auto rc = HAL_PCD_DevDisconnect(std::addressof(g_pcd_handle));
     debug_assert(rc == HAL_OK);
 }
 
@@ -144,7 +149,10 @@ extern "C" void dcd_disconnect(std::uint8_t rhport)
 
 // Configure endpoint's registers according to descriptor
 
-extern "C" bool dcd_edpt_open(std::uint8_t rhport, tusb_desc_endpoint_t const* ep_desc)
+extern "C" bool dcd_edpt_open(
+    std::uint8_t                rhport,
+    tusb_desc_endpoint_t const* ep_desc
+)
 {
     static_cast<void>(rhport);
 
@@ -152,25 +160,34 @@ extern "C" bool dcd_edpt_open(std::uint8_t rhport, tusb_desc_endpoint_t const* e
 
     /* Translate USB standard type codes to STM32. */
 
-      constexpr std::uint8_t type_lut[] =
+    constexpr std::uint8_t k_type_lut[] =
     {
-            [TUSB_XFER_CONTROL]     = EP_TYPE_CTRL,
-            [TUSB_XFER_ISOCHRONOUS] = EP_TYPE_ISOC,
-            [TUSB_XFER_BULK]        = EP_TYPE_BULK,
-            [TUSB_XFER_INTERRUPT]   = EP_TYPE_INTR,
-      };
+        [TUSB_XFER_CONTROL]     = EP_TYPE_CTRL,
+        [TUSB_XFER_ISOCHRONOUS] = EP_TYPE_ISOC,
+        [TUSB_XFER_BULK]        = EP_TYPE_BULK,
+        [TUSB_XFER_INTERRUPT]   = EP_TYPE_INTR,
+    };
 
-    const auto rc = HAL_PCD_EP_Open(&m_pcd_handle, ep_desc->bEndpointAddress, ep_desc->wMaxPacketSize, type_lut[ep_desc->bmAttributes.xfer]);
+    const auto rc = HAL_PCD_EP_Open(
+        std::addressof(g_pcd_handle),
+        ep_desc->bEndpointAddress,
+        ep_desc->wMaxPacketSize,
+        k_type_lut[ep_desc->bmAttributes.xfer]
+    );
+
     debug_assert(rc == HAL_OK);
 
     return rc == HAL_OK ? true : false;
 }
 
-extern "C" void dcd_edpt_close(std::uint8_t rhport, std::uint8_t ep_addr)
+extern "C" void dcd_edpt_close(
+    std::uint8_t rhport,
+    std::uint8_t ep_addr
+)
 {
     static_cast<void>(rhport);
 
-    const auto rc = HAL_PCD_EP_Close(&m_pcd_handle, ep_addr);
+    const auto rc = HAL_PCD_EP_Close(std::addressof(g_pcd_handle), ep_addr);
     debug_assert(rc == HAL_OK);
 }
 
@@ -181,7 +198,12 @@ extern "C" void dcd_edpt_close_all (std::uint8_t rhport)
 
 // Submit a transfer, When complete dcd_event_xfer_complete() is invoked to notify the stack
 
-extern "C" bool dcd_edpt_xfer (std::uint8_t rhport, std::uint8_t ep_addr, std::uint8_t* buffer, std::uint16_t total_bytes)
+extern "C" bool dcd_edpt_xfer(
+    std::uint8_t  rhport,
+    std::uint8_t  ep_addr,
+    std::uint8_t* buffer,
+    std::uint16_t total_bytes
+)
 {
 
     static_cast<void>(rhport);
@@ -191,25 +213,40 @@ extern "C" bool dcd_edpt_xfer (std::uint8_t rhport, std::uint8_t ep_addr, std::u
 
     if ( direction == TUSB_DIR_IN )
     {
-        const auto rc = HAL_PCD_EP_Transmit(&m_pcd_handle, epnum, buffer, static_cast<std::uint32_t>(total_bytes));
+        const auto rc = HAL_PCD_EP_Transmit(
+            std::addressof(g_pcd_handle),
+            epnum,
+            buffer,
+            static_cast<std::uint32_t>(total_bytes)
+        );
         debug_assert(rc == HAL_OK);
 
-        last_in_size = total_bytes;
+        s_last_in_size = total_bytes;
 
         return rc == HAL_OK;
     }
 
-    const auto rc = HAL_PCD_EP_Receive(&m_pcd_handle, epnum, buffer, static_cast<std::uint32_t>(total_bytes));
+    const auto rc = HAL_PCD_EP_Receive(
+        std::addressof(g_pcd_handle),
+        epnum,
+        buffer,
+        static_cast<std::uint32_t>(total_bytes)
+    );
     debug_assert(rc == HAL_OK);
 
-    last_out_size = total_bytes;
+    s_last_out_size = total_bytes;
 
     return rc == HAL_OK;
 }
 
 // Submit a transfer where is managed by FIFO, When complete dcd_event_xfer_complete() is invoked to notify the stack - optional, however, must be listed in usbd.c
 
-extern "C" bool dcd_edpt_xfer_fifo(std::uint8_t rhport, std::uint8_t ep_addr, tu_fifo_t* ff, std::uint16_t total_bytes)
+extern "C" bool dcd_edpt_xfer_fifo(
+    std::uint8_t  rhport,
+    std::uint8_t  ep_addr,
+    tu_fifo_t*    ff,
+    std::uint16_t total_bytes
+)
 {
     static_cast<void>(rhport);
     static_cast<void>(ep_addr);
@@ -221,21 +258,27 @@ extern "C" bool dcd_edpt_xfer_fifo(std::uint8_t rhport, std::uint8_t ep_addr, tu
 
 // Stall endpoint
 
-extern "C" void dcd_edpt_stall(std::uint8_t rhport, std::uint8_t ep_addr)
+extern "C" void dcd_edpt_stall(
+    std::uint8_t rhport,
+    std::uint8_t ep_addr
+)
 {
     static_cast<void>(rhport);
 
-    const auto rc = HAL_PCD_EP_SetStall(&m_pcd_handle, ep_addr);
+    const auto rc = HAL_PCD_EP_SetStall(std::addressof(g_pcd_handle), ep_addr);
     debug_assert(rc == HAL_OK);
 }
 
 // clear stall, data toggle is also reset to DATA0
 
-extern "C" void dcd_edpt_clear_stall(std::uint8_t rhport, std::uint8_t ep_addr)
+extern "C" void dcd_edpt_clear_stall(
+    std::uint8_t rhport,
+    std::uint8_t ep_addr
+)
 {
     static_cast<void>(rhport);
 
-    const HAL_StatusTypeDef rc = HAL_PCD_EP_ClrStall(&m_pcd_handle, ep_addr);
+    const HAL_StatusTypeDef rc = HAL_PCD_EP_ClrStall(std::addressof(g_pcd_handle), ep_addr);
     debug_assert(rc == HAL_OK);
 }
 
@@ -254,13 +297,19 @@ extern "C" void HAL_PCD_SetupStageCallback(PCD_HandleTypeDef* hpcd)
     dcd_event_setup_received(0, (std::uint8_t*) hpcd->Setup, true);
 }
 
-extern "C" void HAL_PCD_DataOutStageCallback(PCD_HandleTypeDef* hpcd, std::uint8_t epnum)
+extern "C" void HAL_PCD_DataOutStageCallback(
+    PCD_HandleTypeDef* hpcd,
+    std::uint8_t       epnum
+)
 {
     const auto count = HAL_PCD_EP_GetRxCount(hpcd, epnum);
     dcd_event_xfer_complete(0, epnum, count, XFER_RESULT_SUCCESS, true);
 }
 
-extern "C" void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef* hpcd, std::uint8_t epnum)
+extern "C" void HAL_PCD_DataInStageCallback(
+    PCD_HandleTypeDef* hpcd,
+    std::uint8_t       epnum
+)
 {
     if ( epnum == 0 )
     {
@@ -269,7 +318,7 @@ extern "C" void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef* hpcd, std::uint8_
 
     else
     {
-        dcd_event_xfer_complete(0, 0x80 | epnum, last_in_size, XFER_RESULT_SUCCESS, true);
+        dcd_event_xfer_complete(0, 0x80 | epnum, s_last_in_size, XFER_RESULT_SUCCESS, true);
     }
 }
 
@@ -302,13 +351,19 @@ extern "C" void HAL_PCD_ResumeCallback(PCD_HandleTypeDef* hpcd)
     dcd_event_bus_signal(0, DCD_EVENT_RESUME, true);
 }
 
-extern "C" void HAL_PCD_ISOOUTIncompleteCallback(PCD_HandleTypeDef* hpcd, std::uint8_t epnum)
+extern "C" void HAL_PCD_ISOOUTIncompleteCallback(
+    PCD_HandleTypeDef* hpcd,
+    std::uint8_t       epnum
+)
 {
     static_cast<void>(hpcd);
     static_cast<void>(epnum);
 }
 
-extern "C" void HAL_PCD_ISOINIncompleteCallback(PCD_HandleTypeDef* hpcd, std::uint8_t epnum)
+extern "C" void HAL_PCD_ISOINIncompleteCallback(
+    PCD_HandleTypeDef* hpcd,
+    std::uint8_t       epnum
+)
 {
     static_cast<void>(hpcd);
     static_cast<void>(epnum);

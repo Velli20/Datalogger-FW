@@ -11,7 +11,7 @@ struct socket
         std::uint16_t             id,
         esp8266::connection_type  type,
         std::chrono::milliseconds timeout
-    )
+    ) noexcept
     {
         // Get a connection type string for an ESP8266 AT-command.
 
@@ -83,14 +83,14 @@ struct socket
         auto rc = device_type<k_instance>::execute_command(k_expected, command, timeout);
         if ( rc != esp8266::atcode_type::k_ok && rc != esp8266::atcode_type::k_network_already_connected )
         {
-            // m_error = make_error_code(esp8266::errc::socket_open);
+            // m_error = make_error_code(esp8266_error_type::k_socket_open);
             return false;
         }
 
         return true;
     }
 
-    static bool close(std::uint16_t id)
+    static bool close(std::uint16_t id) noexcept
     {
         /// CIPCLOSE:
         ///
@@ -202,7 +202,7 @@ struct socket
         return device_type<k_instance>::execute_command(k_expected, command) == esp8266::atcode_type::k_ok;
     }
 
-    static auto receive_length()
+    static auto receive_length() noexcept
     {
         using namespace std::chrono_literals;
 
@@ -255,8 +255,7 @@ struct socket
         std::span<std::byte>      data,
         std::chrono::milliseconds timeout,
         std::uint8_t              link_id
-    )
-
+    ) noexcept
     {
         std::array<char, 256> buffer;
 
@@ -352,7 +351,7 @@ struct socket
         std::chrono::milliseconds  timeout,
         std::uint8_t               link_id,
         bool                       acquire_lock
-    )
+    ) noexcept
     {
         std::array<char, 256> buffer;
 

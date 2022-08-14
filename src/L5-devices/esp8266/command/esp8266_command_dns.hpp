@@ -8,7 +8,7 @@ struct dns
     static bool set(
         std::string_view primary,
         std::string_view secondary = std::string_view{}
-    )
+    ) noexcept
     {
         if ( primary.empty() )
         {

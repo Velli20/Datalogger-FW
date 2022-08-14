@@ -51,9 +51,9 @@ struct peripheral_type<"/chip/usb-otg"> final
     template <arch::arm::vendor_irqn_type k_type>
     static constexpr auto interrupt_handler() noexcept
     {
-        extern PCD_HandleTypeDef m_pcd_handle;
+        extern PCD_HandleTypeDef g_pcd_handle;
 
-        HAL_PCD_IRQHandler(std::addressof(m_pcd_handle));
+        HAL_PCD_IRQHandler(std::addressof(g_pcd_handle));
     }
 
     private:

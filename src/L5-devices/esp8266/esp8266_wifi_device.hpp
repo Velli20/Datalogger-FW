@@ -55,7 +55,7 @@ struct device_type<k_instance, typename std::enable_if<is_wifi_device<k_instance
 
             if ( device_type<k_uart>::read(std::span{std::addressof(data), 1}, k_timeout) == 0u )
             {
-                m_error = make_error_code(esp8266::errc::at_timeout);
+                m_error = make_error_code(esp8266_error_type::k_at_timeout);
                 return {};
             }
 
@@ -71,7 +71,7 @@ struct device_type<k_instance, typename std::enable_if<is_wifi_device<k_instance
         }
     }
 
-    static auto parse(std::integral_constant<esp8266::atcode_type, esp8266::atcode_type::k_incoming_packet_data>) -> sys::expected<std::pair<std::uint32_t, std::uint32_t>, esp8266::errc>
+    static auto parse(std::integral_constant<esp8266::atcode_type, esp8266::atcode_type::k_incoming_packet_data>) -> sys::expected<std::pair<std::uint32_t, std::uint32_t>, esp8266_error_type>
     {
         using namespace std::chrono_literals;
 
@@ -106,14 +106,14 @@ struct device_type<k_instance, typename std::enable_if<is_wifi_device<k_instance
 
     static auto parse(...)
     {
-        return tl::make_unexpected(esp8266::errc::invalid_argument);
+        return tl::make_unexpected(esp8266_error_type::k_invalid_argument);
     }
 
     template <typename T>
     static auto wait(
         std::span<const dev::response<T>> responses,
         std::chrono::milliseconds         timeout = std::chrono::milliseconds(5000)
-    ) -> tl::expected<T, esp8266::errc>
+    ) -> tl::expected<T, esp8266_error_type>
     {
         utils::ringbuffer<char, 128> rb{};
 
@@ -123,7 +123,7 @@ struct device_type<k_instance, typename std::enable_if<is_wifi_device<k_instance
 
             if ( device_type<k_uart>::read(std::span{std::addressof(data), 1}, timeout) == 0u )
             {
-                return tl::make_unexpected(esp8266::errc::at_timeout);
+                return tl::make_unexpected(esp8266_error_type::k_at_timeout);
             }
 
             rb.push_back(std::to_integer<char>(data));
@@ -144,7 +144,7 @@ struct device_type<k_instance, typename std::enable_if<is_wifi_device<k_instance
                 {
                     static constexpr auto k_ipd = std::integral_constant<esp8266::atcode_type, esp8266::atcode_type::k_incoming_packet_data>{};
 
-                    auto rc = parse(k_ipd).and_then([code = resp.code()](auto v) -> sys::expected<void, esp8266::errc>
+                    auto rc = parse(k_ipd).and_then([code = resp.code()](auto v) -> sys::expected<void, esp8266_error_type>
                     {
                         auto [connection, bytes_available] = v;
 
@@ -191,7 +191,7 @@ struct device_type<k_instance, typename std::enable_if<is_wifi_device<k_instance
 
         if ( auto byte_written = device_type<k_uart>::write(data); byte_written != data.size() )
         {
-            m_error = make_error_code(esp8266::errc::at_write);
+            m_error = make_error_code(esp8266_error_type::k_at_write);
             return false;
         }
 
@@ -215,7 +215,7 @@ struct device_type<k_instance, typename std::enable_if<is_wifi_device<k_instance
     {
         if ( device_type<k_uart>::read(buffer, timeout) == 0u )
         {
-            m_error = make_error_code(esp8266::errc::at_timeout);
+            m_error = make_error_code(esp8266_error_type::k_at_timeout);
             return false;
         }
 
@@ -234,7 +234,7 @@ struct device_type<k_instance, typename std::enable_if<is_wifi_device<k_instance
 
             if ( device_type<k_uart>::read(std::span{std::addressof(data), 1}, timeout) == 0u )
             {
-                m_error = make_error_code(esp8266::errc::at_timeout);
+                m_error = make_error_code(esp8266_error_type::k_at_timeout);
                 return false;
             }
 
@@ -264,7 +264,7 @@ struct device_type<k_instance, typename std::enable_if<is_wifi_device<k_instance
             return result.value();
         }
 
-        m_error = make_error_code(esp8266::errc::at_timeout);
+        m_error = make_error_code(esp8266_error_type::k_at_timeout);
         return {};
     }
 
@@ -446,7 +446,7 @@ struct device_type<k_instance, typename std::enable_if<is_wifi_device<k_instance
 
         if ( socket_opt.has_value() == false )
         {
-            m_error = sys::make_error_code(std::errc::no_link);
+            m_error = make_error_code(esp8266_error_type::k_socket_open);
             return {};
         }
 
@@ -455,7 +455,7 @@ struct device_type<k_instance, typename std::enable_if<is_wifi_device<k_instance
 
         if ( esp8266::cmd::socket<k_instance>::open(host, port, socket.id(), type, timeout) == false )
         {
-            m_error = make_error_code(esp8266::errc::socket_open);
+            m_error = make_error_code(esp8266_error_type::k_socket_open);
             socket.set_state(esp8266::state_type::k_disconnected);
             return {};
         }
@@ -477,7 +477,7 @@ struct device_type<k_instance, typename std::enable_if<is_wifi_device<k_instance
 
         if ( esp8266::cmd::socket<k_instance>::close(socket.id()) == false )
         {
-            m_error = make_error_code(esp8266::errc::socket_open);
+            m_error = make_error_code(esp8266_error_type::k_socket_open);
             return false;
         }
 
@@ -715,7 +715,7 @@ struct device_type<k_instance, typename std::enable_if<is_wifi_device<k_instance
 
     static auto init() noexcept -> bool
     {
-        m_error = make_error_code(esp8266::errc::no_error);
+        m_error = make_error_code(esp8266_error_type::k_no_error);
 
         m_unsolicited_responses.reserve(10);
         m_routers.reserve(4);
@@ -767,10 +767,10 @@ struct device_type<k_instance, typename std::enable_if<is_wifi_device<k_instance
 
             return esp8266::cmd::settings<k_instance>::enable_passive_receive_mode(true);
         })
-        .and_then([]() -> tl::expected<void, esp8266::errc>
+        .and_then([]() -> tl::expected<void, esp8266_error_type>
         {
             if ( esp8266::cmd::query<k_instance>::version() == false )
-                return tl::make_unexpected(esp8266::errc::multiple_connections);
+                return tl::make_unexpected(esp8266_error_type::k_multiple_connections);
 
             return {};
         });

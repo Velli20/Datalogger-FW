@@ -5,7 +5,7 @@ namespace sys::dev::esp8266::cmd {
 template <device_node k_instance = "/dev/wifi@0">
 struct access_point
 {
-    static bool clients(concepts::access_point_client_info_callback auto callback)
+    static bool clients(concepts::access_point_client_info_callback auto callback) noexcept
     {
         using namespace std::chrono_literals;
 
@@ -21,7 +21,7 @@ struct access_point
 
         if ( auto rc = device_type<k_instance>::write(std::span{k_command}); rc != true )
         {
-            // m_error = make_error_code(esp8266::errc::at_command_send);
+            // m_error = make_error_code(esp8266_error_type::k_at_command_send);
             return false;
         }
 
@@ -44,7 +44,7 @@ struct access_point
         }
     }
 
-    static bool list(concepts::access_point_found_callback auto callback)
+    static bool list(concepts::access_point_found_callback auto callback) noexcept
     {
         using namespace std::chrono_literals;
 
@@ -60,7 +60,7 @@ struct access_point
 
         if ( auto rc = device_type<k_instance>::write(std::span{k_command}); rc != true )
         {
-            // m_error = make_error_code(esp8266::errc::at_command_send);
+            // m_error = make_error_code(esp8266_error_type::k_at_command_send);
             return false;
         }
 
@@ -135,7 +135,7 @@ struct access_point
 
         if ( device_type<k_instance>::execute_command(k_expected, command) != esp8266::atcode_type::k_ok )
         {
-            // m_error = make_error_code(esp8266::errc::create_access_point);
+            // m_error = make_error_code(esp8266_error_type::k_create_access_point);
             return false;
         }
 
@@ -182,14 +182,14 @@ struct access_point
 
         if ( device_type<k_instance>::execute_command(k_expected, command, 10000ms) != esp8266::atcode_type::k_ok )
         {
-            // m_error = make_error_code(esp8266::errc::connect_to_access_point);
+            // m_error = make_error_code(esp8266_error_type::k_connect_to_access_point);
             return false;
         }
 
         return true;
     }
 
-    static bool disconnect()
+    static bool disconnect() noexcept
     {
         static constexpr auto k_command  = util::make_byte_data("AT+CWQAP\r\n");
         static constexpr auto k_expected = esp8266::response_table::make<
@@ -202,7 +202,7 @@ struct access_point
 
         if ( device_type<k_instance>::execute_command(k_expected, std::span{k_command}) != esp8266::atcode_type::k_ok )
         {
-            // m_error = make_error_code(esp8266::errc::disconnect_from_access_point);
+            // m_error = make_error_code(esp8266_error_type::k_disconnect_from_access_point);
             return false;
         }
 

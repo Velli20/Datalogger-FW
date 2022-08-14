@@ -5,7 +5,7 @@ namespace sys::dev::esp8266::cmd {
 template <device_node k_instance = "/dev/wifi@0">
 struct query
 {
-    static bool version()
+    static bool version() noexcept
     {
         using namespace std::chrono_literals;
 
@@ -21,7 +21,7 @@ struct query
         return device_type<k_instance>::execute_command(k_expected, std::span{k_command}) == esp8266::atcode_type::k_ok;
     }
 
-    static bool command_list(bool enable = true)
+    static bool command_list(bool enable = true) noexcept
     {
         static constexpr auto k_command  = util::make_byte_data("+CMD?\r\n");
         static constexpr auto k_expected = esp8266::response_table::make<
@@ -35,7 +35,7 @@ struct query
         return device_type<k_instance>::execute_command(k_expected, std::span{k_command}) == esp8266::atcode_type::k_ok;
     }
 
-    static bool access_point_ip(esp8266::ip_address_type& v)
+    static bool access_point_ip(esp8266::ip_address_type& v) noexcept
     {
         using namespace std::chrono_literals;
 

@@ -339,11 +339,11 @@ struct peripheral_type<k_node> final
         interrupt::clear();
     }
 
-    static bool init(const dev::serial_console_config& config) noexcept
+    static auto init(const dev::serial_console_config& config) noexcept -> tl::expected<void, hal::uart_error_type>
     {
         if ( auto was_initialized = m_initialized.exchange(true); was_initialized == true )
         {
-            return true;
+            return {};
         }
 
         arch::scoped_interrupt_lock guard{};
@@ -380,7 +380,8 @@ struct peripheral_type<k_node> final
         const auto frequency = hal::peripheral_type<"/chip/rcc">::get_clock_frequency<k_node>();
         if ( frequency.has_value() == false )
         {
-            return m_initialized.exchange(false) == false;
+            m_initialized.exchange(false);
+            return tl::make_unexpected(uart_error_type::k_initialization_error);
         }
 
         // In case of oversampling by 16, the baud rate is given by the following formula:
@@ -450,11 +451,8 @@ struct peripheral_type<k_node> final
 
         enable(true);
 
-        return true;
+        return {};
     }
-
-    // template <std::forward_iterator Iterator>
-    // requires std::convertible_to<typename std::iterator_traits<Iterator>::value_type, std::byte>
 
     static inline auto write(std::span<const std::byte> data) noexcept -> std::size_t
     {
@@ -523,24 +521,6 @@ struct peripheral_type<k_node> final
             }
 
             c = m_read_buffer.data()[index];
-
-            // if constexpr ( k_node == "/chip/uart@4")
-            // {
-            //     if ( c == std::byte{'\r'} )
-            //     {
-            //         constexpr const auto k_esc = std::string_view{"\\r"};
-            //         hal::peripheral_type<"/chip/usart@1">::Write(util::as_byte_data(k_esc));
-            //     }
-
-            //     if ( c == std::byte{'\n'} )
-            //     {
-            //         constexpr const auto k_esc = std::string_view{"\\n"};
-            //         hal::peripheral_type<"/chip/usart@1">::Write(util::as_byte_data(k_esc));
-            //     }
-
-
-            //     hal::peripheral_type<"/chip/usart@1">::Write(std::span<std::byte>{&c, 1});
-            // }
 
             return true;
         };

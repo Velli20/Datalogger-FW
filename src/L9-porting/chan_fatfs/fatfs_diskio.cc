@@ -4,7 +4,7 @@
 #include <base.hpp>
 #include <hal.hpp>
 #include <devices.hpp>
-#include <fatfs/diskio.h>
+#include <diskio.h>
 
 namespace sys {
 

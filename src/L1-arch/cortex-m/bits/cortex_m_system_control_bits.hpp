@@ -428,6 +428,10 @@ struct FloatingPointUnitLayout
     /*!< Offset: 0x014 (R/ )  Media and FP Feature mmio::register_type 1 */
 
     __IM  uint32_t MVFR1;
+
+    /*!< Offset: 0x018 (R/ )  Media and FP Feature Register 2 */
+
+    __IM  uint32_t MVFR2;
 };
 
 static_assert(sizeof(FloatingPointUnitLayout) == sizeof(FPU_Type));

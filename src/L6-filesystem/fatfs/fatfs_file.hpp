@@ -2,7 +2,7 @@
 
 // Includes.
 
-#include <fatfs/ff.h>
+#include <ff.h>
 
 namespace sys::fatfs {
 

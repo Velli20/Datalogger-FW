@@ -12,54 +12,64 @@ add_library(libexpected INTERFACE)
 
 target_include_directories(libexpected
     INTERFACE
-        ${PROJECT_SOURCE_DIR}/external/expected
+        ${PROJECT_SOURCE_DIR}/external/expected/include/tl
 )
 
 # ARM CMSIS library.
 
-add_library(libcmsis INTERFACE)
+add_library(libcmsis
+    EXCLUDE_FROM_ALL
+        ${PROJECT_SOURCE_DIR}/external/cmsis_device_l4/Source/Templates/system_stm32l4xx.c
+)
 
 target_include_directories(libcmsis
-    INTERFACE
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/CMSIS/Device/ST/STM32L4xx/Include
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/CMSIS/Include
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/external/cmsis_device_l4/Include
+        ${PROJECT_SOURCE_DIR}/external/cmsis_core/Include
 )
 
 target_compile_definitions(libcmsis
-    INTERFACE
+    PUBLIC
         $<$<COMPILE_LANGUAGE:CXX,C,ASM>:
             STM32L4S5xx
         >
+)
+
+set_compiler_options_for_firmware(
+    TARGET
+        libcmsis
+    STRICT
+        OFF
 )
 
 # STMicroelectronics STM32L4-HAL library.
 
 add_library(libstm32l4
     EXCLUDE_FROM_ALL
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/l4_hal_drivers/Src/stm32l4xx_hal.c
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/l4_hal_drivers/Src/stm32l4xx_hal_i2c.c
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/l4_hal_drivers/Src/stm32l4xx_hal_i2c_ex.c
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/l4_hal_drivers/Src/stm32l4xx_hal_rcc.c
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/l4_hal_drivers/Src/stm32l4xx_hal_rcc_ex.c
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/l4_hal_drivers/Src/stm32l4xx_hal_sd.c
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/l4_hal_drivers/Src/stm32l4xx_hal_sd_ex.c
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/l4_hal_drivers/Src/stm32l4xx_hal_ospi.c
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/l4_hal_drivers/Src/stm32l4xx_hal_pcd.c
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/l4_hal_drivers/Src/stm32l4xx_hal_pcd_ex.c
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/l4_hal_drivers/Src/stm32l4xx_hal_pwr.c
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/l4_hal_drivers/Src/stm32l4xx_hal_pwr_ex.c
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/l4_hal_drivers/Src/stm32l4xx_hal_dma.c
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/l4_hal_drivers/Src/stm32l4xx_hal_gpio.c
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/l4_hal_drivers/Src/stm32l4xx_ll_usb.c
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/l4_hal_drivers/Src/stm32l4xx_ll_sdmmc.c
+        ${PROJECT_SOURCE_DIR}/external/stm32l4xx_hal_driver/Src/stm32l4xx_hal.c
+        ${PROJECT_SOURCE_DIR}/external/stm32l4xx_hal_driver/Src/stm32l4xx_hal_i2c.c
+        ${PROJECT_SOURCE_DIR}/external/stm32l4xx_hal_driver/Src/stm32l4xx_hal_i2c_ex.c
+        ${PROJECT_SOURCE_DIR}/external/stm32l4xx_hal_driver/Src/stm32l4xx_hal_rcc.c
+        ${PROJECT_SOURCE_DIR}/external/stm32l4xx_hal_driver/Src/stm32l4xx_hal_rcc_ex.c
+        ${PROJECT_SOURCE_DIR}/external/stm32l4xx_hal_driver/Src/stm32l4xx_hal_sd.c
+        ${PROJECT_SOURCE_DIR}/external/stm32l4xx_hal_driver/Src/stm32l4xx_hal_sd_ex.c
+        ${PROJECT_SOURCE_DIR}/external/stm32l4xx_hal_driver/Src/stm32l4xx_hal_ospi.c
+        ${PROJECT_SOURCE_DIR}/external/stm32l4xx_hal_driver/Src/stm32l4xx_hal_pcd.c
+        ${PROJECT_SOURCE_DIR}/external/stm32l4xx_hal_driver/Src/stm32l4xx_hal_pcd_ex.c
+        ${PROJECT_SOURCE_DIR}/external/stm32l4xx_hal_driver/Src/stm32l4xx_hal_pwr.c
+        ${PROJECT_SOURCE_DIR}/external/stm32l4xx_hal_driver/Src/stm32l4xx_hal_pwr_ex.c
+        ${PROJECT_SOURCE_DIR}/external/stm32l4xx_hal_driver/Src/stm32l4xx_hal_dma.c
+        ${PROJECT_SOURCE_DIR}/external/stm32l4xx_hal_driver/Src/stm32l4xx_hal_gpio.c
+        ${PROJECT_SOURCE_DIR}/external/stm32l4xx_hal_driver/Src/stm32l4xx_ll_usb.c
+        ${PROJECT_SOURCE_DIR}/external/stm32l4xx_hal_driver/Src/stm32l4xx_ll_sdmmc.c
 )
 
 target_include_directories(libstm32l4
     PUBLIC
         ${PROJECT_SOURCE_DIR}/src/L4-hal/stm32l4
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/l4_hal_drivers/Inc
+        ${PROJECT_SOURCE_DIR}/external/stm32l4xx_hal_driver/Inc
     PRIVATE
-        ${PROJECT_SOURCE_DIR}/external/STMicroelectronics/l4_hal_drivers/Inc/Legacy
+        ${PROJECT_SOURCE_DIR}/external/stm32l4xx_hal_driver/Inc/Legacy
 )
 
 target_link_libraries(libstm32l4
@@ -80,6 +90,7 @@ target_compile_definitions(libstm32l4
             USE_HAL_DRIVER
             USE_HAL_I2C_REGISTER_CALLBACKS=0
             USE_HAL_USART_REGISTER_CALLBACKS=0
+            USE_HAL_UART_REGISTER_CALLBACKS=0
             USE_HAL_SPI_REGISTER_CALLBACKS=0
             USE_HAL_RTC_REGISTER_CALLBACKS=0
             USE_HAL_LPTIM_REGISTER_CALLBACKS=0
@@ -96,20 +107,20 @@ target_compile_definitions(libstm32l4
 
 add_library(libfreertos
     EXCLUDE_FROM_ALL
-        ${PROJECT_SOURCE_DIR}/external/FreeRTOS/tasks.c
-        ${PROJECT_SOURCE_DIR}/external/FreeRTOS/queue.c
-        ${PROJECT_SOURCE_DIR}/external/FreeRTOS/list.c
+        ${PROJECT_SOURCE_DIR}/external/FreeRTOS-Kernel/tasks.c
+        ${PROJECT_SOURCE_DIR}/external/FreeRTOS-Kernel/queue.c
+        ${PROJECT_SOURCE_DIR}/external/FreeRTOS-Kernel/list.c
 
         $<$<C_COMPILER_ID:GNU>:
-            ${PROJECT_SOURCE_DIR}/external/FreeRTOS/portable/GCC/ARM_CM4F/port.c
+            ${PROJECT_SOURCE_DIR}/external/FreeRTOS-Kernel/portable/GCC/ARM_CM4F/port.c
         >
 )
 
 target_include_directories(libfreertos
     PUBLIC
-        ${PROJECT_SOURCE_DIR}/external/FreeRTOS
-        ${PROJECT_SOURCE_DIR}/external/FreeRTOS/include
-        ${PROJECT_SOURCE_DIR}/external/FreeRTOS/portable/GCC/ARM_CM4F
+        ${PROJECT_SOURCE_DIR}/external/FreeRTOS-Kernel
+        ${PROJECT_SOURCE_DIR}/external/FreeRTOS-Kernel/include
+        ${PROJECT_SOURCE_DIR}/external/FreeRTOS-Kernel/portable/GCC/ARM_CM4F
         ${PROJECT_SOURCE_DIR}/src/L9-porting/freertos
 )
 
@@ -285,7 +296,6 @@ add_executable(firmware
     ${PROJECT_SOURCE_DIR}/src/L1-arch/cortex-m/handle_bad_interrupt.cc
     ${PROJECT_SOURCE_DIR}/src/L1-arch/cortex-m/cortex_m_startup.cc
     ${PROJECT_SOURCE_DIR}/src/L4-hal/stm32l4/board_impl.cc
-    ${PROJECT_SOURCE_DIR}/src/L4-hal/stm32l4/system_stm32l4xx.c
     ${PROJECT_SOURCE_DIR}/src/L7-runtime/globals.cc
     ${PROJECT_SOURCE_DIR}/src/L8-main-process/libc/assert.cc
     ${PROJECT_SOURCE_DIR}/src/L8-main-process/libc/retarget.cc

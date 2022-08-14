@@ -5,7 +5,7 @@ namespace sys::dev::esp8266::cmd {
 template <device_node k_instance = "/dev/wifi@0">
 struct sntp
 {
-    static bool now(std::tm& t)
+    static bool now(std::tm& t) noexcept
     {
         using namespace std::chrono_literals;
 
@@ -20,33 +20,35 @@ struct sntp
 
         if ( auto rc = device_type<k_instance>::write(std::span{k_command}); rc != true )
         {
-            // m_error = make_error_code(esp8266::errc::at_command_send);
+            // m_error = make_error_code(esp8266_error_type::k_at_command_send);
             return false;
         }
 
         if ( auto response = device_type<k_instance>::wait(esp8266::response_table::make<esp8266::atcode_type::k_sntp_time>::value, 10000ms); response != esp8266::atcode_type::k_sntp_time )
         {
-            // m_error = make_error_code(esp8266::errc::get_sntp_time);
+            // m_error = make_error_code(esp8266_error_type::k_get_sntp_time);
             return false;
         }
 
         if ( auto rc = device_type<k_instance>::read(esp8266::parse::sntp{t}, 10000ms); rc != true )
         {
-            // m_error = make_error_code(esp8266::errc::get_sntp_time);
+            // m_error = make_error_code(esp8266_error_type::k_get_sntp_time);
             return false;
         }
 
         if ( auto response = device_type<k_instance>::wait(k_expected, 10000ms); response != esp8266::atcode_type::k_ok )
         {
-            // m_error = make_error_code(esp8266::errc::get_sntp_time);
+            // m_error = make_error_code(esp8266_error_type::k_get_sntp_time);
             return false;
         }
 
         return true;
     }
 
-    static bool enable(std::int32_t           timezone,
-                       const std::string_view server = std::string_view{""})
+    static bool enable(
+        std::int32_t           timezone,
+        const std::string_view server = std::string_view{""}
+    )
     {
         std::array<char, 128> buffer;
 
@@ -79,7 +81,7 @@ struct sntp
 
         if ( device_type<k_instance>::execute_command(k_expected, command) != esp8266::atcode_type::k_ok )
         {
-            // m_error = make_error_code(esp8266::errc::enable_sntp_server);
+            // m_error = make_error_code(esp8266_error_type::k_enable_sntp_server);
             return false;
         }
 

@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <fatfs/ff.h>
+#include <ff.h>
 
 template <>
 struct sys::is_error_code_enum<FRESULT> : std::true_type {};

@@ -120,11 +120,13 @@ struct peripheral_type<"/chip/sdmmc@1"> final
 
         std::lock_guard<platform::mutex> lock{m_write_lock};
 
+        const auto* buffer_data = std::bit_cast<const std::uint8_t*>(buffer.data());
+
         // Write block(s) in blocking mode if called from the interrupt context (USB MCS).
 
         if ( arch::is_in_interrupt_handler() )
         {
-            const auto hal_rc = HAL_SD_WriteBlocks(m_card_handle, std::bit_cast<const std::uint8_t*>(buffer.data()), block_address, buffer.size(), k_operation_timeout_irq.count());
+            const auto hal_rc = HAL_SD_WriteBlocks(m_card_handle, const_cast<std::uint8_t*>(buffer_data), block_address, buffer.size(), k_operation_timeout_irq.count());
             if ( hal_rc != HAL_OK )
             {
                 m_error = make_error_code(m_card_handle.error());
@@ -137,7 +139,7 @@ struct peripheral_type<"/chip/sdmmc@1"> final
         // Write block(s) in DMA transfer mode.
 
         {
-            const auto hal_rc = HAL_SD_WriteBlocks_DMA(m_card_handle, std::bit_cast<const std::uint8_t*>(buffer.data()), block_address, buffer.size());
+            const auto hal_rc = HAL_SD_WriteBlocks_DMA(m_card_handle, const_cast<std::uint8_t*>(buffer_data), block_address, buffer.size());
             if ( hal_rc != HAL_OK )
             {
                 m_error = make_error_code(m_card_handle.error());
@@ -162,7 +164,7 @@ struct peripheral_type<"/chip/sdmmc@1"> final
             return true;
         }
 
-        m_error = make_error_code(hal_sdmmc_error::no_error);
+        m_error = make_error_code(hal_sdmmc_error_type::k_no_error);
 
         hal::peripheral_type<"/chip/rcc">::enable<k_node>();
 

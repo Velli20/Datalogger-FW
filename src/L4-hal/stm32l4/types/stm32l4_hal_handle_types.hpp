@@ -41,7 +41,7 @@ struct hal_handle final : public T
 
     auto error() requires(std::is_same<T, SD_HandleTypeDef>::value)
     {
-        return static_cast<hal_sdmmc_error>(get()->ErrorCode);
+        return static_cast<hal_sdmmc_error_type>(get()->ErrorCode);
     }
 
     auto error() requires(std::is_same<T, OSPI_HandleTypeDef>::value)
@@ -51,7 +51,7 @@ struct hal_handle final : public T
 
     auto error() requires(std::is_same<T, I2C_HandleTypeDef>::value)
     {
-        return static_cast<hal_i2c_error>(get()->ErrorCode);
+        return static_cast<hal_i2c_error_type>(get()->ErrorCode);
     }
 };
 

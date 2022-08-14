@@ -4,6 +4,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wvolatile"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
 #include <stm32l4xx_hal.h>
 #pragma GCC diagnostic pop
 
@@ -26,6 +27,7 @@ extern "C" std::uint32_t SystemCoreClock;
 #include <stm32l4/detail/stm32l4_instance_of_detail.hpp>
 #include <stm32l4/concepts/stm32l4_concepts.hpp>
 
+#include <stm32l4/types/stm32l4_uart_error_category.hpp>
 #include <stm32l4/types/stm32l4_hal_status_error_category_types.hpp>
 #include <stm32l4/types/stm32l4_hal_sdmmc_error_category.hpp>
 #include <stm32l4/types/stm32l4_hal_i2c_error_category.hpp>

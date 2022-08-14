@@ -5,7 +5,7 @@ namespace sys::dev::esp8266::cmd {
 template <device_node k_instance = "/dev/wifi@0">
 struct power
 {
-    static bool set_mode(esp8266::sleep_mode_type mode)
+    static bool set_mode(esp8266::sleep_mode_type mode) noexcept
     {
         std::array<char, 128> buffer;
 
@@ -38,14 +38,14 @@ struct power
 
         if ( device_type<k_instance>::execute_command(k_expected, command) != esp8266::atcode_type::k_ok )
         {
-            // m_error = make_error_code(esp8266::errc::deep_sleep_mode);
+            // m_error = make_error_code(esp8266_error_type::k_deep_sleep_mode);
             return false;
         }
 
         return true;
     }
 
-    static bool deep_sleep(std::chrono::milliseconds sleep_time)
+    static bool deep_sleep(std::chrono::milliseconds sleep_time) noexcept
     {
         std::array<char, 128> buffer;
 
@@ -77,7 +77,7 @@ struct power
 
         if ( device_type<k_instance>::execute_command(k_expected, command) != esp8266::atcode_type::k_ok )
         {
-            // m_error = make_error_code(esp8266::errc::deep_sleep_mode);
+            // m_error = make_error_code(esp8266_error_type::k_deep_sleep_mode);
             return false;
         }
 
